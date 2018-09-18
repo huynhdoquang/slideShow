@@ -5,10 +5,9 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 public class CreateProfile : MonoBehaviour {
-    
 
-    public bool isLoop;
-    private float tempPos;
+
+    private bool isLoop = true;
 
 	public RectTransform[] introImages;
 
@@ -17,8 +16,8 @@ public class CreateProfile : MonoBehaviour {
 	private float mousePositionStartX;
 	private float mousePositionEndX;
     public float dragAmount;
-    public float screenPosition;
-    public float lastScreenPosition;
+    private float screenPosition;
+    private float lastScreenPosition;
 	private float lerpTimer;
 	private float lerpPage;
 
@@ -41,13 +40,6 @@ public class CreateProfile : MonoBehaviour {
 		for(int i = 0; i < introImages.Length; i++){
 
 			introImages[i].anchoredPosition = new Vector2(((wide+spaceBetweenProfileImages)*i),0);
-            if (introImages[i].gameObject.GetComponent<Button>() != null)
-            {
-                Debug.Log(":v: " + introImages[i].gameObject.GetComponent<Button>().name + i);
-                var j = i;
-                introImages[i].gameObject.GetComponent<Button>().onClick.AddListener(delegate { OnSelectCard(j); });
-            }
-
         }
 
 		side = "left";
@@ -56,40 +48,8 @@ public class CreateProfile : MonoBehaviour {
 
 	}
     
-    void OnSelectCard(int cardIndex)
-    {
-        Debug.Log("just push button: " + cardIndex);
-        if (cardIndex > pageCount) //On the right
-        {
-            dragAmount = -35;
-            Debug.Log("ben phai: " + pageCount);
-            
-            screenPosition -= 130; 
-        }
-        else if(cardIndex < pageCount-1) // On the Left
-        {
-            dragAmount = 35;
-            Debug.Log("ben trai: " + pageCount);
-            screenPosition += 130;
-        }
-        
-        OnSwipeComplete();
-    }
-
     void CheckTouch()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            if (EventSystem.current.currentSelectedGameObject != null)
-            {
-                if (EventSystem.current.IsPointerOverGameObject() && EventSystem.current.currentSelectedGameObject.CompareTag("card"))
-                    Debug.Log("validInput true ");
-                else if (EventSystem.current.IsPointerOverGameObject())
-                    Debug.Log("validInput false ");
-                else
-                    Debug.Log("validInput true ");
-            }
-        }
         //TODO: Xác định vị trí Screen height
         if (Input.GetMouseButtonDown(0) && Input.mousePosition.y > (Screen.height * 0.6173f) && Input.mousePosition.y < (Screen.height * 0.91f))
         {
@@ -112,11 +72,11 @@ public class CreateProfile : MonoBehaviour {
         {
             canSwipe = false;
             lastScreenPosition = screenPosition;
-            if (pageCount < introImages.Length)
+            if (pageCount < (introImages.Length-1))
                 OnSwipeComplete();
-            else if (pageCount == introImages.Length && dragAmount < 0)
-                lerpTimer = 0;
-            else if (pageCount == introImages.Length && dragAmount > 0)
+            else if (pageCount == (introImages.Length - 1) && dragAmount < 0)
+                OnSwipeComplete();
+            else if (pageCount == (introImages.Length - 1) && dragAmount > 0)
                 OnSwipeComplete();
         }
 
@@ -124,11 +84,43 @@ public class CreateProfile : MonoBehaviour {
         {
             if (Mathf.Abs(dragAmount) < swipeThrustHold)
             {
-                lerpTimer = 0;
+                if (EventSystem.current.currentSelectedGameObject != null)
+                {
+                    if (EventSystem.current.IsPointerOverGameObject() && EventSystem.current.currentSelectedGameObject.CompareTag("card"))
+                    {
+                        Debug.Log("validInput true " + EventSystem.current.currentSelectedGameObject.transform.GetSiblingIndex());
+                        int index = EventSystem.current.currentSelectedGameObject.transform.GetSiblingIndex();
+
+                        if ((pageCount == 0 && index == introImages.Length - 1) ||
+                            index == pageCount-1)
+                        {
+                            Debug.Log("trai");
+                            dragAmount = 40;
+                            screenPosition = lastScreenPosition + dragAmount;
+                        }else if ((pageCount == introImages.Length - 1 && index == 0) ||
+                            index == pageCount+1)
+                        {
+                            Debug.Log("phai");
+                            dragAmount = -40;
+                            screenPosition = lastScreenPosition + dragAmount;
+                        }
+                        else
+                        {
+                            lerpTimer = 0;
+                        }
+                    }
+                    else if (EventSystem.current.IsPointerOverGameObject())
+                        lerpTimer = 0;
+                    else
+                        lerpTimer = 0;
+                }
+                else
+                {
+                    lerpTimer = 0;
+                }
             }
         }
     }
-
 
     void Update() {
         
@@ -141,12 +133,37 @@ public class CreateProfile : MonoBehaviour {
         CheckTouch();
 
         for (int i = 0; i < introImages.Length; i++){
-          
-            introImages[i].anchoredPosition = new Vector2(screenPosition + ((wide + spaceBetweenProfileImages) * i), 0);
+
+            if (isLoop)
+            {
+                if(pageCount == 0)
+                {
+                    if( i == introImages.Length - 1)
+                    {
+                        introImages[i].anchoredPosition =
+                            new Vector2(screenPosition + ((wide + spaceBetweenProfileImages) * -1), 0);
+                    }else
+                        introImages[i].anchoredPosition = new Vector2(screenPosition + ((wide + spaceBetweenProfileImages) * i), 0);
+                }
+                else if(pageCount == (introImages.Length - 1))
+                {
+                    if(i == 0)
+                    {
+                        introImages[i].anchoredPosition =
+                        new Vector2(screenPosition + ((wide + spaceBetweenProfileImages) * introImages.Length), 0);
+
+                    }else
+                        introImages[i].anchoredPosition = new Vector2(screenPosition + ((wide + spaceBetweenProfileImages) * i), 0);
+                }
+                else
+                     introImages[i].anchoredPosition = new Vector2(screenPosition + ((wide + spaceBetweenProfileImages) * i), 0);
+            }
+            else
+                introImages[i].anchoredPosition = new Vector2(screenPosition + ((wide + spaceBetweenProfileImages) * i), 0);
             
             
 			if(side == "right") {
-				if(i == pageCount-1) {
+				if(i == pageCount) {
                     //TODO:
 					introImages[i].localScale = Vector3.Lerp(introImages[i].localScale,new Vector3(1.2f,1.2f,1.2f),Time.deltaTime*5);
 					Color temp = introImages[i].GetComponent<Image>().color;
@@ -169,8 +186,6 @@ public class CreateProfile : MonoBehaviour {
                 }
 			}
 		}
-
-
 	}
 
 	#endregion
@@ -180,51 +195,42 @@ public class CreateProfile : MonoBehaviour {
 
         Debug.Log("in");
 		lastScreenPosition=screenPosition;
-
+        
 		if(dragAmount > 0){
+            Debug.Log(" i trai");
+            if ( Mathf.Abs(dragAmount) > (swipeThrustHold))
+            {
+                side = "left";
+                pageCount -= 1;
+                lerpTimer = 0;
+                if (pageCount < 0)
+                    pageCount = introImages.Length - 1;
+                lerpPage = (wide + spaceBetweenProfileImages) * pageCount;
 
-			if(Mathf.Abs(dragAmount) > (swipeThrustHold)){
-
-				if(pageCount == 0){
-					lerpTimer=0;
-					lerpPage=0;
-				}else {
-					if(side == "right")
-						pageCount--;
-					side = "left";
-					pageCount-=1;
-					lerpTimer=0;
-					if(pageCount < 0)
-						pageCount = 0;
-					lerpPage = (wide+spaceBetweenProfileImages)*pageCount;
-					//introimage[pagecount] is the current picture
-				}
-
-			} else {
-				lerpTimer=0;
-			}
+            }
+            else
+            {
+                lerpTimer = 0;
+                
+            }
+           
 
 		} else if(dragAmount < 0) {
-            Debug.Log("phai");
-            if (Mathf.Abs(dragAmount) > (swipeThrustHold)){
-
-				if(pageCount == introImages.Length){
-					lerpTimer=0;
-					lerpPage=(wide+spaceBetweenProfileImages)*introImages.Length-1;
-				}else {
-                    //if (side == "left")
-                    //    pageCount++;
-                    side = "right";
-					lerpTimer=0;
-					lerpPage = (wide+spaceBetweenProfileImages)*pageCount;
-					pageCount++;
-					//introimage[pagecount] is the current picture
-				}
-
-			} else {
-
-				lerpTimer=0;
-			}
+            Debug.Log("i phai");
+            if ( Mathf.Abs(dragAmount) > (swipeThrustHold))
+            {
+                side = "right";
+                lerpTimer = 0;
+                pageCount++;
+                if (pageCount > introImages.Length - 1)
+                    pageCount = 0;
+                lerpPage = (wide + spaceBetweenProfileImages) * pageCount;
+            }
+            else
+            {
+                lerpTimer = 0;
+            }
+        
 		}
 	}
 
