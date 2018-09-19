@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class CreateProfile : MonoBehaviour {
+public class CarouselView : MonoBehaviour {
 
 
     private bool isLoop = true;
-    public int numberCardDislay = 3;
+    //TODO:
+    private int numberCardDislay = 3;
     public float scaleOfChooseCard;
     public float scaleOfUnChooseCard;
     public int spaceBetweenProfileImages = 30;
@@ -106,13 +107,11 @@ public class CreateProfile : MonoBehaviour {
                         if ((pageCount == 0 && index == introImages.Length - 1) ||
                             index == pageCount-1)
                         {
-                            Debug.Log("trai");
                             dragAmount = 40;
                             screenPosition = lastScreenPosition + dragAmount;
                         }else if ((pageCount == introImages.Length - 1 && index == 0) ||
                             index == pageCount+1)
                         {
-                            Debug.Log("phai");
                             dragAmount = -40;
                             screenPosition = lastScreenPosition + dragAmount;
                         }
