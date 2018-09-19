@@ -8,7 +8,7 @@ public class CarouselView : MonoBehaviour {
 
 
     private bool isLoop = true;
-    //TODO:
+    //TODO: 
     private int numberCardDislay = 3;
     public float scaleOfChooseCard;
     public float scaleOfUnChooseCard;
